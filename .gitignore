@@ -1,0 +1,18 @@
+# files to ignore in the repository
+# Python bytecode files
+old/*.py
+old/*.ipynb
+# Python compiled objects
+*.pyc
+*.pyo
+
+# Packaging
+MANIFEST
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+pytest_cache/
+
