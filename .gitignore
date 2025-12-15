@@ -5,6 +5,7 @@ old/*.ipynb
 # Python compiled objects
 *.pyc
 *.pyo
+*.vscode
 
 # Packaging
 MANIFEST
