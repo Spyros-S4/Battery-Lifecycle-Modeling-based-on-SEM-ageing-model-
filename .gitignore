@@ -25,3 +25,6 @@ old/
 
 # Packaging
 MANIFEST
+
+# Ignore the notes file
+notes.md

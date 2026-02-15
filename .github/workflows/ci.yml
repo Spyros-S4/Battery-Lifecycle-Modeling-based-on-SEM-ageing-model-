@@ -2,10 +2,12 @@ name: CI
 
 on:
   push:
+    branches: [main, test]
   pull_request:
+    branches: [main, test]
 
 jobs:
-  test:
+  test-and-docker-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,5 +25,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Run tests
-        run: |
-          pytest -q
+        run: pytest -q
+
+      - name: Build Docker image
+        run: docker build -t sem:ci .
