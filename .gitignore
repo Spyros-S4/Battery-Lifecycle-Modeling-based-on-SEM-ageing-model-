@@ -1,19 +1,27 @@
-# files to ignore in the repository
-# Python bytecode files
-old/*.py
-old/*.ipynb
-# Python compiled objects
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Python bytecode
+__pycache__/
 *.pyc
 *.pyo
-*.vscode
 
-# Packaging
-MANIFEST
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
 
 # Testing
 .coverage
 htmlcov/
 .tox/
-nosetests.xml
 pytest_cache/
 
+# Other folders/files to ignore
+old/
+
+# Packaging
+MANIFEST

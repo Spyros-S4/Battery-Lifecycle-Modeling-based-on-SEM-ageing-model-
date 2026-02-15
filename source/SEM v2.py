@@ -400,7 +400,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-# 6) SOHs FCE
+# 7) SOHs FCE
 
 plt.figure(figsize=(10, 6))
 plt.plot(
