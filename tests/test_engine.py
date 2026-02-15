@@ -1,5 +1,5 @@
 # tests/test_engine.py
-from src.engine import Params, run_simulation
+from sem.engine import Params, run_simulation
 
 def test_engine_stops_and_capacity_decreases():
     p = Params(
