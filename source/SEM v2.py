@@ -12,16 +12,16 @@ time_step = 10  # Time step in seconds
 a = 1  # parameter for control
 T = 20  # Temperature in C
 T = T + 273.15  # Temperature in Kelvin
-I = 113.5  # Discharge current in Ampere
+I = 113  # Discharge current in Ampere
 
 I_discharge = I / 3  # C/3 [A]
-I_charge = I * 1     # 1C [A]
+I_charge = I * 1  # 1C [A]
 
 R = 8.314  # Gas constant in J/(mol·K)
-b = 118.1924  # Initial battery capacity (Ah)
+b = 118.1993  # Initial battery capacity (Ah)
 SOC = 0.475  # used for calendar ageing
 DOD = 0.75  # Depth of discharge
-ratio = 1 # ratio between discharge and charge time
+ratio = 1  # ratio between discharge and charge time
 
 # cycling parameters
 E_cycling = 2.909338197235501e04  # Activation energy for cycling in J/mol
@@ -107,7 +107,7 @@ b_resistance = b21 * SOC**2 + b22 * SOC + b23
 
 # Phases duration
 calendar_duration = 0  # Calendar aging duration in seconds
-cycling_duration = 10*3600  # Cycling aging duration in seconds
+cycling_duration = 3600 * 10  # Cycling aging duration in seconds
 
 # Initialize variables for simulation
 capacities = [b]  # Initial capacity list
@@ -119,16 +119,16 @@ dRdt_values = [0]  # Store dRdt values %
 N_cycles = [0]  # store N cycles values
 Q_per = [0]
 dQ_dt_cyclingg = [0]
-total_throughput = 0.01  # Total throughput (Ah) during cycling
-cycling_throughput = 0.01  # Throughput for the current cycling phase
-FCE_knee = 0.01
+total_throughput = 0.1  # Total throughput (Ah) during cycling
+cycling_throughput = 0.1  # Throughput for the current cycling phase
+FCE_knee = 0.1
 N = 0
 Q_loss_calendar = 0
-Q_loss_cycling = 0
+Q_loss_cycling = 0.05
 R_percentage = 0.01
 dRdt_cycling = 0
 dRdt_calendar = 0
-Resistance_scale_cycling = 3.5
+Resistance_scale_cycling = 1
 dQ_dt_cycling = 0
 
 # Run the simulation until a 20% capacity drop is observed
@@ -170,7 +170,7 @@ while Q_percentage < threshold:
 
         if Q_percentage < Q_critical:
             # Calculate time from Q
-            t_from_Q = (3600 * b / I) * (
+            t_from_Q = (3600 * 2 * b / I) * (
                 (b * (Q_percentage / 100)) / (a_cycling * np.exp(-E_cycling / (R * T)))
             ) ** (1 / z_cycling)
 
@@ -253,7 +253,7 @@ while Q_percentage < threshold:
     )
 
     if current_time > 0:
-        Q_percentage = ((b - capacity) / b * 100)
+        Q_percentage = (b - capacity) / b * 100
 
     # Append updated values to lists
     dRdt_values.append(R_percentage)
@@ -290,86 +290,129 @@ print(f"Q loss calendar: {Q_loss_calendar} Ah")
 print(f"Q loss cycling: {Q_loss_cycling} Ah")
 print(f"Resistance has increase by: {dRdt_values[-1]} %")
 
-# Plot capacity vs. number of weeks (Filtered Data)
-plt.figure(figsize=(10, 6))
-plt.plot(dQdt_values, label="Capacity (Ah)", color="blue", marker="o")
-plt.xlabel("Time (Weeks)")
-plt.ylabel("dQdt (Ah)")
-plt.title("Battery Capacity Over Time (Cycling + Calendar Aging)")
-plt.legend()
-plt.grid()
-plt.show()
+# Define a consistent capacity threshold (80% of initial/nominal capacity)
+# If b is your nominal/initial capacity (Ah), keep this:
+cap_threshold = b * (100 - threshold) / 100
+# If you prefer using the first measured capacity instead, use this instead:
+# cap_threshold = filtered_df["Capacity (Ah)"].iloc[0] * 0.8
 
+# 1) dQ_dt vs Weeks (filtered)
 
-# Plot capacity vs. number of weeks (Filtered Data)
 plt.figure(figsize=(10, 6))
 plt.plot(
-    filtered_df["Weeks"],
-    filtered_df["Capacity (Ah)"],
+    filtered_df["Weeks"].to_numpy(),
+    filtered_df["dQ_dt"].abs().to_numpy(),
+    label="|dQ/dt| (Filtered)",
+    marker="o",
+)
+plt.xlabel("Time (Weeks)")
+plt.ylabel("|dQ/dt| (Ah/week)")  # adjust if your unit differs
+plt.title("|dQ/dt| vs Time (Filtered)")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# 2) Capacity vs Weeks (filtered)
+
+plt.figure(figsize=(10, 6))
+plt.plot(
+    filtered_df["Weeks"].to_numpy(),
+    filtered_df["Capacity (Ah)"].to_numpy(),
     label="Capacity (Ah)",
-    color="blue",
     marker="o",
 )
 plt.xlabel("Time (Weeks)")
 plt.ylabel("Capacity (Ah)")
-plt.title("Battery Capacity Over Time (Cycling + Calendar Aging)")
-plt.axhline(
-    b * 0.8, color="red", linestyle="--", label="20% Capacity Drop"
-)  # 20% capacity drop
+plt.title("Battery Capacity Over Time (Filtered)")
+plt.axhline(cap_threshold, color="red", linestyle="--", label="80% Capacity Threshold")
 plt.legend()
-plt.grid()
+plt.grid(True)
+plt.tight_layout()
 plt.show()
 
-# Plot dQdt vs. filtered time
+# 3) Capacity vs Weeks (model/sim arrays)
+
 plt.figure(figsize=(10, 6))
 plt.plot(
-    filtered_df["Weeks"],
-    abs(filtered_df["dQ_dt"]),
-    label="dQdt (Filtered)",
-    color="green",
-    marker="o",
+    np.asarray(time_points_weeks),
+    np.asarray(capacities),
+    label="Capacity (Ah)",
 )
-plt.xlabel("Time (Weeks)")
-plt.ylabel("dQdt")
-plt.title("dQdt vs. Time (Cycling + Calendar Aging) - Filtered Data")
-plt.legend()
-plt.grid()
-plt.show()
-
-# Plot capacity vs. number of weeks (Filtered Data)
-plt.figure(figsize=(10, 6))
-plt.plot(time_points_weeks, capacities, label="Capacity (Ah)", color="blue")
 plt.xlabel("Time (Weeks)")
 plt.ylabel("Capacity (Ah)")
 plt.title("Battery Capacity Over Time (Cycling + Calendar Aging)")
-plt.axhline(b * 0.8, color="red", linestyle="--", label="20% Capacity Drop")
+plt.axhline(cap_threshold, color="red", linestyle="--", label="80% Capacity Threshold")
 plt.legend()
-plt.grid()
+plt.grid(True)
+plt.tight_layout()
 plt.show()
 
-# Plot Resistance vs. FCE
+# 4) Resistance increase vs Weeks
+
 plt.figure(figsize=(10, 6))
-plt.plot(time_points_weeks, resistance_increase, label="Resistance %", color="blue")
+plt.plot(
+    np.asarray(time_points_weeks),
+    np.asarray(resistance_increase),
+    label="Resistance Increase (%)",
+)
 plt.xlabel("Time (Weeks)")
-plt.ylabel("Resistance Increase %")
-plt.title("Resistance Over Time ")
-plt.axhline(b * 0.8, color="red", linestyle="--", label="20% Capacity Drop")
+plt.ylabel("Resistance Increase (%)")
+plt.title("Resistance Increase Over Time")
+# Optional threshold for resistance (example: +20%). Change/remove as needed.
+# plt.axhline(20, color="red", linestyle="--", label="+20% Resistance Threshold")
 plt.legend()
-plt.grid()
+plt.grid(True)
+plt.tight_layout()
 plt.show()
 
-# Labels and values for the bar chart
+# 5) Calendar vs Cycling contribution (same units!)
+
 labels = ["Calendar Aging", "Cycling Aging"]
 values = [Q_loss_calendar, Q_loss_cycling]
 
-# Create the bar chart
 plt.figure(figsize=(10, 6))
-plt.bar(labels, values, color=["blue", "green"])
+plt.bar(labels, values)
 plt.xlabel("Degradation Phase")
-plt.ylabel("Capacity Loss (Ah or %)")
-plt.title("Comparison of Calendar and Cycling Aging Contributions")
-plt.ylim(0, max(values) + 5)  # Set y-axis limits for better visualization
-plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.ylabel(
+    "Capacity Loss (same unit for both bars)"
+)  # make sure both are Ah or both are %
+plt.title("Calendar vs Cycling Aging Contributions")
+plt.ylim(0, max(values) * 1.1 if max(values) != 0 else 1)
+plt.grid(True, axis="y", linestyle="--", alpha=0.7)
 plt.tight_layout()
 plt.show()
-plt.grid()
+
+# 6) Capacity vs FCE
+
+plt.figure(figsize=(10, 6))
+plt.plot(
+    np.asarray(N_cycles),
+    np.asarray(capacities),
+    label="Capacity (Ah)",
+)
+plt.xlabel("Full Charge Equivalents (FCE)")
+plt.ylabel("Capacity (Ah)")
+plt.title("Battery Capacity vs Full Cycles Equivalents (FCE)")
+plt.axhline(cap_threshold, color="red", linestyle="--", label="80% Capacity Threshold")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# 6) SOHs FCE
+
+plt.figure(figsize=(10, 6))
+plt.plot(
+    np.asarray(N_cycles),
+    np.asarray(capacities) / b * 100,
+    label="Capacity (Ah)",
+)
+plt.xlabel("Full Charge Equivalents (FCE)")
+plt.ylabel("State of Health (%)")
+plt.title("Battery SOH Evolution vs Full Cycles Equivalents (FCE)")
+plt.axhline(100-threshold, color="red", linestyle="--", label="80% Capacity Threshold")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
