@@ -4,6 +4,15 @@ Version: 0.1.0
 Requires-Python: >=3.10
 Requires-Dist: numpy
 Requires-Dist: pandas
-Requires-Dist: matplotlib
+Requires-Dist: matplotlib==3.10.8
+Requires-Dist: cycler==0.12.1
+Requires-Dist: fonttools==4.61.1
+Requires-Dist: kiwisolver==1.4.9
+Requires-Dist: packaging==26.0
+Requires-Dist: pillow==12.1.1
+Requires-Dist: pyparsing==3.3.2
+Requires-Dist: python-dateutil==2.9.0.post0
+Requires-Dist: six==1.17.0
+Requires-Dist: tzdata==2025.3
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
